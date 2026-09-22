@@ -131,7 +131,7 @@ Safe procedure:
     #    - ids must be unique; generate new ones with: uuidgen
 
     # 4. relaunch - whichever copy you actually use
-    open "$HOME/Downloads/School/Cornell/CASE/CS 1110/TodoApp/build/Todo List.app"
+    open "$HOME/Downloads/Code/ToDo/build/Todo List.app"
     # or, if you have dragged it there:
     # open "/Applications/Todo List.app"
 
@@ -144,7 +144,7 @@ the file parses:
 
 5. THE APP ITSELF
 --------------------------------------------------------------------------------
-Source:     ~/Downloads/School/Cornell/CASE/CS 1110/TodoApp
+Source:     ~/Downloads/Code/ToDo
 Rebuild:    ./build.sh          (produces build/Todo List.app, takes seconds)
 Preference: the remembered tab is stored separately, not in todos.json:
 
