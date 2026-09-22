@@ -1,0 +1,155 @@
+================================================================================
+HOW TO GET THE DATA OUT OF THE TODO LIST APP
+================================================================================
+Written for a person or an AI assistant with shell access. Nothing here needs
+screen control, Accessibility permission, or the app to be running.
+
+
+1. WHERE THE DATA IS
+--------------------------------------------------------------------------------
+One file, plain JSON:
+
+    ~/Documents/Todo List/todos.json
+
+It is a normal, visible folder - it shows up in Finder under Documents.
+(Before 2026-09-02 it lived in ~/Library/Application Support/Todo List. The app
+moves it on first launch and deletes the old folder, so that path is dead.)
+
+The path contains spaces. Always quote it or escape the spaces:
+
+    cat "$HOME/Documents/Todo List/todos.json"
+
+If the file does not exist, the app has never saved a task. That is not an error.
+
+
+2. WHAT IS IN IT
+--------------------------------------------------------------------------------
+A flat JSON array. One object per task. No nesting, no separate files.
+
+    [
+      {
+        "id":        "D03C6939-CC09-44B1-8B16-B456A167BDA1",
+        "title":     "Math HW 2",
+        "horizon":   "shortTerm",
+        "bucket":    "assignments",
+        "isDone":    false,
+        "isStarred": true,
+        "createdAt": "2026-09-01T03:53:02Z"
+      },
+      ...
+    ]
+
+FIELD       VALUES AND MEANING
+---------   ------------------------------------------------------------------
+title       The task text. Free-form.
+horizon     "shortTerm" or "longTerm". Two separate views in the app.
+bucket      "readings", "assignments", "emails", or "other".
+            Only meaningful when horizon is "shortTerm". Long-term tasks are
+            shown as one flat list, so their bucket is a placeholder - ignore it.
+isDone      true or false.
+isStarred   true or false. Starring does NOT change sort order.
+createdAt   ISO 8601 UTC. Not shown anywhere in the app.
+id          UUID. Stable for the life of the task.
+
+Older files may be missing "bucket", "horizon", or "isStarred". The app fills in
+defaults when it loads them (bucket "assignments", horizon "shortTerm",
+isStarred false). Anything reading the file directly should do the same.
+
+
+3. READING IT
+--------------------------------------------------------------------------------
+Whole file:
+
+    cat "$HOME/Documents/Todo List/todos.json"
+
+Everything still open:
+
+    jq -r '.[] | select(.isDone | not) | .title' \
+      "$HOME/Documents/Todo List/todos.json"
+
+Open assignments only:
+
+    jq -r '.[] | select((.isDone | not) and .bucket == "assignments"
+           and .horizon == "shortTerm") | .title' \
+      "$HOME/Documents/Todo List/todos.json"
+
+    (The parentheses around .isDone | not matter. Without them jq pipes the
+     boolean into the rest of the expression and errors out.)
+
+Starred tasks:
+
+    jq -r '.[] | select(.isStarred) | .title' \
+      "$HOME/Documents/Todo List/todos.json"
+
+Long-term list:
+
+    jq -r '.[] | select(.horizon == "longTerm") | .title' \
+      "$HOME/Documents/Todo List/todos.json"
+
+Counts per section:
+
+    jq -r '[.[] | select(.horizon == "shortTerm" and (.isDone | not))]
+           | group_by(.bucket)[] | "\(.[0].bucket): \(length) open"' \
+      "$HOME/Documents/Todo List/todos.json"
+
+If jq is missing, python3 is always present on macOS:
+
+    python3 -c "
+    import json, os
+    p = os.path.expanduser('~/Documents/Todo List/todos.json')
+    for t in json.load(open(p)):
+        if not t['isDone']:
+            print(t.get('bucket'), '|', t['title'])
+    "
+
+Reading while the app is running is safe. The app writes the file atomically,
+so a reader never sees a half-written file.
+
+The app sorts alphabetically, case-insensitive, with numbers read as numbers
+("Chapter 3" before "Chapter 11") and finished tasks at the bottom. The file
+itself is in insertion order - sort it yourself if you want to match the app.
+
+
+4. CHANGING THE DATA - READ THIS FIRST
+--------------------------------------------------------------------------------
+QUIT THE APP BEFORE EDITING THE FILE.
+
+The app keeps the entire list in memory and rewrites the whole file on every
+change. If it is running when you edit the file, your edits are silently
+destroyed the moment anything is added, ticked, or renamed.
+
+Safe procedure:
+
+    # 1. quit
+    osascript -e 'tell application "Todo List" to quit'
+
+    # 2. back up
+    cp "$HOME/Documents/Todo List/todos.json" ~/todos-backup.json
+
+    # 3. edit the file, keeping the structure in section 2
+    #    - every task needs id, title, horizon, bucket, isDone, isStarred, createdAt
+    #    - ids must be unique; generate new ones with: uuidgen
+
+    # 4. relaunch - whichever copy you actually use
+    open "$HOME/Downloads/School/Cornell/CASE/CS 1110/TodoApp/build/Todo List.app"
+    # or, if you have dragged it there:
+    # open "/Applications/Todo List.app"
+
+If the app shows an empty list after an edit, the JSON is malformed - the app
+falls back to an empty list rather than crashing. Restore the backup and check
+the file parses:
+
+    python3 -m json.tool ~/todos-backup.json > /dev/null && echo "valid JSON"
+
+
+5. THE APP ITSELF
+--------------------------------------------------------------------------------
+Source:     ~/Downloads/School/Cornell/CASE/CS 1110/TodoApp
+Rebuild:    ./build.sh          (produces build/Todo List.app, takes seconds)
+Preference: the remembered tab is stored separately, not in todos.json:
+
+    defaults read com.rubenhayrapetyan.todolist selectedHorizon
+
+Deleting todos.json resets the app to empty. Copying it to another Mac moves
+the tasks with it.
+================================================================================
