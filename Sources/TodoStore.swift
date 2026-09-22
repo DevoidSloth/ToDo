@@ -3,8 +3,8 @@ import Foundation
 
 /// Owns the task list and keeps it on disk.
 ///
-/// Tasks live in ~/Library/Application Support/Todo List/todos.json and are
-/// rewritten atomically after every change, so a crash can't leave a half file.
+/// Tasks live in ~/Documents/Todo List/todos.json and are rewritten atomically
+/// after every change, so a crash can't leave a half file.
 final class TodoStore: ObservableObject {
     @Published private(set) var todos: [Todo] = []
 
