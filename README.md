@@ -4,6 +4,12 @@ A small, self-contained Mac app: SwiftUI front end, JSON storage on disk, no
 dependencies and no Xcode project. It builds with the Swift compiler that ships
 with the Command Line Tools.
 
+<p align="center">
+  <img src="docs/demo.gif" width="420" alt="Adding a task, starring it, and marking another one done">
+</p>
+
+<p align="center"><sub>Preview rendered from the app's own colors, type, and layout rules (<code>Sources/DesignSystem.swift</code>) — sample data, not a real task list.</sub></p>
+
 ## Build
 
 ```bash
@@ -48,6 +54,27 @@ the section you typed it in.
   only, so clearing short term never touches long term.
 - **⌘Q** quits, and closing the window quits too. Every change is written to
   disk the moment you make it, so nothing is lost either way.
+
+## Screenshots
+
+<table>
+<tr>
+<td align="center" width="50%">
+  <img src="docs/short-term-light.png" width="380" alt="Short term view, light mode: Readings, Assignments, Emails, and Other sections">
+  <br><sub>Short term — light</sub>
+</td>
+<td align="center" width="50%">
+  <img src="docs/short-term-dark.png" width="380" alt="Short term view, dark mode">
+  <br><sub>Short term — dark</sub>
+</td>
+</tr>
+<tr>
+<td align="center" colspan="2">
+  <img src="docs/long-term-light.png" width="380" alt="Long term view: a single flat list with no sections">
+  <br><sub>Long term — one flat list, no sections</sub>
+</td>
+</tr>
+</table>
 
 ## Where the data lives
 
